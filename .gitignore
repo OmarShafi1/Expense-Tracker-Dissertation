@@ -1,7 +1,9 @@
 # Dependencies
 node_modules/
-package-lock.json
-package.json
+
+# Exclude the accidental root-level npm install (leading / = root only)
+/package-lock.json
+/package.json
 
 # Environment variables — NEVER commit real secrets
 .env
