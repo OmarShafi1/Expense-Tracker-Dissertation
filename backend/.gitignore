@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment variables — contains real MongoDB password and JWT secret
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE and editor tool settings
+.vscode/
+.idea/
+.claude/
