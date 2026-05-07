@@ -34,18 +34,6 @@ export default function Navbar() {
           {mode === 'adaptive' ? 'Switch to Manual' : 'Switch to Adaptive'}
         </button>
 
-        {/* Session ID — only visible in manual mode */}
-        {mode === 'manual' && (
-          <input
-            className="session-id-input"
-            type="text"
-            placeholder="Session ID"
-            value={sessionId}
-            onChange={e => setSessionId(e.target.value)}
-            title="Tag this test session for evaluation analysis"
-          />
-        )}
-
         {/* Dark / light mode toggle */}
         <button
           className="btn-theme-toggle"

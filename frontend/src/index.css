@@ -651,10 +651,145 @@ body {
 .dot-amber { background: #f59e0b; }
 .dot-grey  { background: var(--border); }
 
+/* ── Budget progress bars (Dashboard category cards) ── */
+.budget-section { margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.budget-bar-track {
+  height: 6px;
+  background: var(--border-mid);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.budget-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #22c55e;
+  transition: width 0.3s ease;
+}
+.budget-bar-fill.budget-near { background: #f59e0b; }
+.budget-bar-fill.budget-over { background: var(--danger); }
+.budget-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.budget-over-text { color: var(--danger); font-weight: 600; }
+.budget-edit-row { display: flex; align-items: center; gap: 0.3rem; }
+.budget-set-row  { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.4rem; }
+.budget-set-btn {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  width: 100%;
+  transition: border-color 0.15s, color 0.15s;
+}
+.budget-set-btn:hover { border-color: var(--accent); color: var(--accent); }
+.budget-edit-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.budget-input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.78rem;
+  width: 75px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+.budget-input:focus { outline: none; border-color: var(--accent); }
+.budget-save {
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.budget-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* ── Search & filter bar (Expenses page) ── */
+.search-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.search-input {
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+.search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(102,126,234,0.12); }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.filter-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+.filter-chip-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Recurring badge & expense desc row ── */
+.expense-desc-row { display: flex; align-items: center; gap: 0.45rem; }
+.recurring-badge {
+  display: inline-block;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 99px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .recurring-badge { background: #422006; color: #fcd34d; }
+
+/* ── Expense meta (date column in expense list) ── */
+.expense-meta { display: flex; align-items: center; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .dashboard-cols { grid-template-columns: 1fr; }
   .insights-panel { position: static; }
   .navbar { gap: 0.75rem; padding: 0 1rem; }
   .btn-eval-toggle { display: none; }
+  .filter-chips { gap: 0.3rem; }
+  .filter-chip { padding: 0.25rem 0.65rem; font-size: 0.75rem; }
 }

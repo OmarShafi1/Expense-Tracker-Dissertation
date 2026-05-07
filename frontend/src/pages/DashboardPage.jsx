@@ -109,7 +109,27 @@ export default function DashboardPage() {
   const [error, setError] = useState('')
   const [demoNotice, setDemoNotice] = useState(null)
   const [filter, setFilter] = useState('month')
+
+  // Budgets stored in localStorage: { "Groceries": 200, "Transport": 50, ... }
+  const [budgets, setBudgets] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('budgets') || '{}') }
+    catch { return {} }
+  })
+  const [editingBudget, setEditingBudget] = useState(null)
+  const [budgetInput, setBudgetInput] = useState('')
+
   const { user } = useAuth()
+
+  function saveBudget(category) {
+    const val = parseFloat(budgetInput)
+    if (!isNaN(val) && val > 0) {
+      const updated = { ...budgets, [category]: val }
+      setBudgets(updated)
+      localStorage.setItem('budgets', JSON.stringify(updated))
+    }
+    setEditingBudget(null)
+    setBudgetInput('')
+  }
 
   // One-time demo banner after sign-up
   useEffect(() => {
@@ -255,18 +275,79 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Sidebar insights panel */}
-                  <InsightsPanel summary={summary} />
+                  <InsightsPanel summary={summary} allExpenses={allExpenses} />
                 </div>
 
-                {/* ── Row 4: Category breakdown cards ── */}
+                {/* ── Row 4: Category cards with budget progress bars ── */}
                 <div className="category-grid">
-                  {summary.map(item => (
-                    <div key={item._id} className="category-card">
-                      <span className="category-name">{item._id}</span>
-                      <span className="category-amount">£{item.total.toFixed(2)}</span>
-                      <span className="category-count">{item.count} expense{item.count !== 1 ? 's' : ''}</span>
-                    </div>
-                  ))}
+                  {summary.map(item => {
+                    const budget  = budgets[item._id]
+                    const pct     = budget ? Math.min(100, Math.round((item.total / budget) * 100)) : null
+                    const overBudget = pct !== null && pct >= 100
+                    const nearBudget = pct !== null && pct >= 80 && pct < 100
+                    return (
+                      <div key={item._id} className="category-card">
+                        <span className="category-name">{item._id}</span>
+                        <span className="category-amount">£{item.total.toFixed(2)}</span>
+                        <span className="category-count">{item.count} expense{item.count !== 1 ? 's' : ''}</span>
+
+                        {/* Budget progress bar */}
+                        {budget ? (
+                          <div className="budget-section">
+                            <div className="budget-bar-track">
+                              <div
+                                className={`budget-bar-fill ${overBudget ? 'budget-over' : nearBudget ? 'budget-near' : ''}`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <div className="budget-labels">
+                              <span className={overBudget ? 'budget-over-text' : ''}>
+                                {pct}% of £{budget}
+                              </span>
+                              {editingBudget === item._id ? (
+                                <span className="budget-edit-row">
+                                  <input
+                                    className="budget-input"
+                                    type="number"
+                                    value={budgetInput}
+                                    onChange={e => setBudgetInput(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && saveBudget(item._id)}
+                                    autoFocus
+                                    min="1"
+                                  />
+                                  <button className="budget-save" onClick={() => saveBudget(item._id)}>✓</button>
+                                  <button className="budget-cancel" onClick={() => setEditingBudget(null)}>✕</button>
+                                </span>
+                              ) : (
+                                <button className="budget-edit-btn" onClick={() => { setEditingBudget(item._id); setBudgetInput(String(budget)) }}>Edit</button>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          editingBudget === item._id ? (
+                            <div className="budget-set-row">
+                              <input
+                                className="budget-input"
+                                type="number"
+                                placeholder="Monthly limit £"
+                                value={budgetInput}
+                                onChange={e => setBudgetInput(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && saveBudget(item._id)}
+                                autoFocus
+                                min="1"
+                              />
+                              <button className="budget-save" onClick={() => saveBudget(item._id)}>✓</button>
+                              <button className="budget-cancel" onClick={() => setEditingBudget(null)}>✕</button>
+                            </div>
+                          ) : (
+                            <button className="budget-set-btn" onClick={() => { setEditingBudget(item._id); setBudgetInput('') }}>
+                              + Set budget
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
 
                 {/* ── Row 5: Recent expenses ── */}

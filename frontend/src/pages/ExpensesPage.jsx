@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import client from '../api/client'
 import Navbar from '../components/Navbar'
 import { useEval } from '../context/EvalContext'
@@ -24,6 +24,10 @@ export default function ExpensesPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Search & filter state
+  const [search, setSearch] = useState('')
+  const [filterCategory, setFilterCategory] = useState('All')
+
   useEffect(() => {
     Promise.all([
       client.get('/expenses'),
@@ -34,6 +38,26 @@ export default function ExpensesPage() {
     }).catch(() => setError('Failed to load expenses'))
       .finally(() => setLoading(false))
   }, [])
+
+  // Recurring detection — any description appearing 2+ times is recurring
+  const recurringDescriptions = useMemo(() => {
+    const counts = {}
+    for (const exp of expenses) {
+      const key = exp.description.toLowerCase()
+      counts[key] = (counts[key] || 0) + 1
+    }
+    return new Set(Object.keys(counts).filter(k => counts[k] >= 2))
+  }, [expenses])
+
+  // Apply search + category filter to the expense list
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(exp => {
+      const matchesSearch = search === '' ||
+        exp.description.toLowerCase().includes(search.toLowerCase())
+      const matchesCategory = filterCategory === 'All' || exp.category === filterCategory
+      return matchesSearch && matchesCategory
+    })
+  }, [expenses, search, filterCategory])
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -67,10 +91,7 @@ export default function ExpensesPage() {
       } else {
         // Include suggestedCategory so the backend can detect overrides
         // and trigger the adaptive learning step (learnFromCorrection)
-        const payload = {
-          ...form,
-          suggestedCategory: suggestion?.category ?? null,
-        }
+        const payload = { ...form, suggestedCategory: suggestion?.category ?? null }
         const res = await client.post('/expenses', payload)
         setExpenses([res.data, ...expenses])
       }
@@ -170,26 +191,12 @@ export default function ExpensesPage() {
               <div className="form-row">
                 <div className="form-group">
                   <label>Amount (£)</label>
-                  <input
-                    type="number"
-                    name="amount"
-                    value={form.amount}
-                    onChange={handleChange}
-                    step="0.01"
-                    min="0.01"
-                    placeholder="0.00"
-                    required
-                  />
+                  <input type="number" name="amount" value={form.amount} onChange={handleChange}
+                    step="0.01" min="0.01" placeholder="0.00" required />
                 </div>
                 <div className="form-group">
                   <label>Date</label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    required
-                  />
+                  <input type="date" name="date" value={form.date} onChange={handleChange} required />
                 </div>
               </div>
 
@@ -207,11 +214,33 @@ export default function ExpensesPage() {
                 <button type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Saving...' : editingId ? 'Update Expense' : 'Add Expense'}
                 </button>
-                <button type="button" className="btn-secondary" onClick={handleCancel}>
-                  Cancel
-                </button>
+                <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* ── Search & filter bar ── */}
+        {!loading && expenses.length > 0 && (
+          <div className="search-filter-bar">
+            <input
+              className="search-input"
+              type="text"
+              placeholder="Search expenses…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <div className="filter-chips">
+              {['All', ...categories].map(cat => (
+                <button
+                  key={cat}
+                  className={`filter-chip ${filterCategory === cat ? 'filter-chip-active' : ''}`}
+                  onClick={() => setFilterCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -223,26 +252,43 @@ export default function ExpensesPage() {
           </div>
         )}
 
-        {expenses.length > 0 && (
+        {!loading && filteredExpenses.length === 0 && expenses.length > 0 && (
+          <div className="empty-state">
+            <p>No expenses match your search.</p>
+          </div>
+        )}
+
+        {filteredExpenses.length > 0 && (
           <div className="expense-list">
-            {expenses.map(expense => (
-              <div key={expense._id} className="expense-item">
-                <div className="expense-info">
-                  <span className="expense-desc">{expense.description}</span>
-                  <span className="expense-category tag">{expense.category}</span>
+            {filteredExpenses.map(expense => {
+              const recurring = recurringDescriptions.has(expense.description.toLowerCase())
+              return (
+                <div key={expense._id} className="expense-item">
+                  <div className="expense-info">
+                    <div className="expense-desc-row">
+                      <span className="expense-desc">{expense.description}</span>
+                      {/* Recurring badge — shown when the same description appears 2+ times */}
+                      {recurring && (
+                        <span className="recurring-badge" title="This description appears regularly">
+                          Recurring
+                        </span>
+                      )}
+                    </div>
+                    <span className="expense-category tag">{expense.category}</span>
+                  </div>
+                  <div className="expense-meta">
+                    <span className="expense-date">
+                      {new Date(expense.date).toLocaleDateString('en-GB')}
+                    </span>
+                  </div>
+                  <div className="expense-right">
+                    <span className="expense-amount">£{Number(expense.amount).toFixed(2)}</span>
+                    <button className="btn-edit" onClick={() => handleEdit(expense)}>Edit</button>
+                    <button className="btn-delete" onClick={() => handleDelete(expense._id)}>Delete</button>
+                  </div>
                 </div>
-                <div className="expense-meta">
-                  <span className="expense-date">
-                    {new Date(expense.date).toLocaleDateString('en-GB')}
-                  </span>
-                </div>
-                <div className="expense-right">
-                  <span className="expense-amount">£{Number(expense.amount).toFixed(2)}</span>
-                  <button className="btn-edit" onClick={() => handleEdit(expense)}>Edit</button>
-                  <button className="btn-delete" onClick={() => handleDelete(expense._id)}>Delete</button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </main>
