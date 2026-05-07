@@ -136,6 +136,18 @@ export default function ExpensesPage() {
     }
   }
 
+  async function handleDeleteAll() {
+    if (!window.confirm(`Delete all ${expenses.length} expenses? This cannot be undone.`)) return
+    try {
+      await client.delete('/expenses')
+      setExpenses([])
+      setSearch('')
+      setFilterCategory('All')
+    } catch {
+      setError('Failed to delete all expenses')
+    }
+  }
+
   function handleCancel() {
     setForm(EMPTY_FORM)
     setEditingId(null)
@@ -156,9 +168,14 @@ export default function ExpensesPage() {
           <div className="expenses-main">
             <div className="page-header">
               <h2>Expenses</h2>
-              {!showForm && (
-                <button className="btn-primary" onClick={() => setShowForm(true)}>+ Add Expense</button>
-              )}
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {!showForm && (
+                  <button className="btn-primary" onClick={() => setShowForm(true)}>+ Add Expense</button>
+                )}
+                {expenses.length > 0 && (
+                  <button className="btn-delete-all" onClick={handleDeleteAll}>Delete All</button>
+                )}
+              </div>
             </div>
 
             {showForm && (

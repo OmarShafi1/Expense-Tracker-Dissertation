@@ -784,6 +784,20 @@ body {
 /* ── Expense meta (date column in expense list) ── */
 .expense-meta { display: flex; align-items: center; }
 
+/* ── Delete-all button ── */
+.btn-delete-all {
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-delete-all:hover { background: var(--danger); color: #fff; }
+
 /* ── Wide container (used on dashboard + expenses for horizontal space) ── */
 .container-wide { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
 
@@ -806,56 +820,23 @@ body {
 }
 .qs-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 .qs-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
-
-/* ── Spending heatmap (Dashboard) ── */
-.heatmap-card {
-  background: var(--bg-card);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-md);
-  margin-top: 1.5rem;
-  overflow: hidden;
-}
-.heatmap-month-row {
-  display: grid;
-  grid-template-columns: repeat(52, 1fr);
-  gap: 2px;
-  margin-bottom: 3px;
-}
-.heatmap-month-label {
-  font-size: 9px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: visible;
-}
-.heatmap-grid {
-  display: grid;
-  grid-template-columns: repeat(52, 1fr);
-  gap: 2px;
-}
-.heatmap-col { display: flex; flex-direction: column; gap: 2px; }
-.heatmap-cell { aspect-ratio: 1; border-radius: 2px; cursor: default; }
-
-/* Heatmap intensity levels — purple palette to match the app */
-.hm-0 { background: var(--border-mid); }
-.hm-1 { background: #c4b5fd; }
-.hm-2 { background: #8b5cf6; }
-.hm-3 { background: #6d28d9; }
-.hm-4 { background: #4c1d95; }
-[data-theme="dark"] .hm-0 { background: #1e2436; }
-[data-theme="dark"] .hm-1 { background: #2e1065; }
-[data-theme="dark"] .hm-2 { background: #4c1d95; }
-[data-theme="dark"] .hm-3 { background: #6d28d9; }
-[data-theme="dark"] .hm-4 { background: #a78bfa; }
-
-.heatmap-legend {
+.qs-budget-section { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.qs-budget-footer {
   display: flex;
   align-items: center;
-  gap: 3px;
-  margin-top: 0.6rem;
-  justify-content: flex-end;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
-.heatmap-legend-label { font-size: 0.72rem; color: var(--text-muted); margin: 0 3px; }
+.qs-forecast {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border-mid);
+}
+
+/* (SpendingHeatmap removed — replaced by MonthlyTrendChart area chart) */
 
 /* ── Expenses two-column layout ── */
 .expenses-layout {

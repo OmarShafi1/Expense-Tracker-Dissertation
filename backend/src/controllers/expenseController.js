@@ -195,6 +195,15 @@ const deleteExpense = async (req, res, next) => {
   }
 };
 
+const deleteAllExpenses = async (req, res, next) => {
+  try {
+    await Expense.deleteMany({ userId: req.user._id });
+    res.json({ message: 'All expenses deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getCategories = (req, res) => {
   res.json({ categories: CATEGORIES });
 };
@@ -206,5 +215,6 @@ module.exports = {
   getSummary,
   updateExpense,
   deleteExpense,
+  deleteAllExpenses,
   getCategories,
 };

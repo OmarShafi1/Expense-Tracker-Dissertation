@@ -7,7 +7,7 @@ import {
 import client from '../api/client'
 import Navbar from '../components/Navbar'
 import InsightsPanel from '../components/InsightsPanel'
-import SpendingHeatmap from '../components/SpendingHeatmap'
+import MonthlyTrendChart from '../components/MonthlyTrendChart'
 import { useAuth } from '../context/AuthContext'
 
 const PALETTE = [
@@ -21,7 +21,6 @@ const FILTERS = [
   { id: 'all',   label: 'All Time' },
 ]
 
-// Returns startDate / endDate query params for the selected filter
 function getDateRange(filter) {
   const now = new Date()
   const end = now.toISOString().split('T')[0]
@@ -38,7 +37,6 @@ function getDateRange(filter) {
   return {}
 }
 
-// Builds daily bar data for the past `days` days
 function buildDailyData(expenses, days, shortLabels = false) {
   const result = []
   for (let i = days - 1; i >= 0; i--) {
@@ -56,7 +54,6 @@ function buildDailyData(expenses, days, shortLabels = false) {
   return result
 }
 
-// Groups all expenses by calendar month for the All Time bar chart
 function buildMonthlyData(expenses) {
   const map = {}
   for (const exp of expenses) {
@@ -68,7 +65,6 @@ function buildMonthlyData(expenses) {
   return Object.entries(map).map(([date, total]) => ({ date, total }))
 }
 
-// Filters expenses to a date range (used for bar chart scoping)
 function filterExpensesByRange(expenses, range) {
   if (!range.startDate) return expenses
   return expenses.filter(e => {
@@ -77,20 +73,13 @@ function filterExpensesByRange(expenses, range) {
   })
 }
 
-/**
- * Returns a human-readable relative date string.
- * e.g. "Today", "Yesterday", "3 days ago", "2 weeks ago", "12 Apr"
- * Used in the Recent Expenses list to show when each expense was added.
- */
 function relativeDate(dateStr) {
   if (!dateStr) return ''
   const exp   = new Date(dateStr)
   const today = new Date()
-  // Strip time components for a clean day-level comparison
   const expDay   = new Date(exp.getFullYear(),   exp.getMonth(),   exp.getDate())
   const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   const diffDays = Math.round((todayDay - expDay) / 86400000)
-
   if (diffDays === 0) return 'Today'
   if (diffDays === 1) return 'Yesterday'
   if (diffDays < 7)  return `${diffDays} days ago`
@@ -111,13 +100,21 @@ export default function DashboardPage() {
   const [demoNotice, setDemoNotice] = useState(null)
   const [filter, setFilter] = useState('month')
 
-  // Budgets stored in localStorage: { "Groceries": 200, "Transport": 50, ... }
+  // Per-category budgets: { "Groceries": 200, ... }
   const [budgets, setBudgets] = useState(() => {
     try { return JSON.parse(localStorage.getItem('budgets') || '{}') }
     catch { return {} }
   })
   const [editingBudget, setEditingBudget] = useState(null)
   const [budgetInput, setBudgetInput] = useState('')
+
+  // Overall weekly/monthly budgets: { weekly: 150, monthly: 600 }
+  const [overallBudgets, setOverallBudgets] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('overallBudgets') || '{}') }
+    catch { return {} }
+  })
+  const [editingOverall, setEditingOverall] = useState(null) // 'weekly' | 'monthly' | null
+  const [overallInput, setOverallInput] = useState('')
 
   const { user } = useAuth()
 
@@ -132,7 +129,17 @@ export default function DashboardPage() {
     setBudgetInput('')
   }
 
-  // One-time demo banner after sign-up
+  function saveOverallBudget(key) {
+    const val = parseFloat(overallInput)
+    if (!isNaN(val) && val > 0) {
+      const updated = { ...overallBudgets, [key]: val }
+      setOverallBudgets(updated)
+      localStorage.setItem('overallBudgets', JSON.stringify(updated))
+    }
+    setEditingOverall(null)
+    setOverallInput('')
+  }
+
   useEffect(() => {
     const count = localStorage.getItem('demoCount')
     if (count) {
@@ -141,31 +148,26 @@ export default function DashboardPage() {
     }
   }, [])
 
-  // Fetch all expenses once for the Recent Expenses list and bar chart
   useEffect(() => {
     client.get('/expenses')
       .then(res => setAllExpenses(res.data || []))
       .catch(() => {})
   }, [])
 
-  // Re-fetch the category summary (and adaptive accuracy) when filter changes
   useEffect(() => {
     setLoading(true)
     const range = getDateRange(filter)
     const params = new URLSearchParams(range).toString()
     const url = params ? `/expenses/summary?${params}` : '/expenses/summary'
-
     client.get(url)
       .then(res => {
         setSummary(res.data.byCategory || [])
-        // adaptiveAccuracy is a 0-1 float; null if no suggestions have been made yet
         setAdaptiveAccuracy(res.data.adaptiveAccuracy ?? null)
       })
       .catch(() => setError('Failed to load dashboard'))
       .finally(() => setLoading(false))
   }, [filter])
 
-  // Rebuild bar chart whenever filter or expenses change
   useEffect(() => {
     const range  = getDateRange(filter)
     const scoped = filterExpensesByRange(allExpenses, range)
@@ -176,17 +178,17 @@ export default function DashboardPage() {
 
   const total = summary.reduce((sum, item) => sum + item.total, 0)
 
-  // 8 most recent expenses sorted newest-first — used in the Recent list
   const recentExpenses = [...allExpenses]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 8)
 
   const quickStats = useMemo(() => {
     if (allExpenses.length === 0) return null
-    const todayStr = new Date().toISOString().split('T')[0]
-    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 6)
-    const weekAgoStr = weekAgo.toISOString().split('T')[0]
-    const monthStart = new Date(); monthStart.setDate(1)
+    const now       = new Date()
+    const todayStr  = now.toISOString().split('T')[0]
+    const weekAgo   = new Date(now); weekAgo.setDate(now.getDate() - 6)
+    const weekAgoStr   = weekAgo.toISOString().split('T')[0]
+    const monthStart   = new Date(now.getFullYear(), now.getMonth(), 1)
     const monthStartStr = monthStart.toISOString().split('T')[0]
 
     const todayTotal = allExpenses
@@ -199,8 +201,73 @@ export default function DashboardPage() {
       .filter(e => (e.date || '').split('T')[0] >= monthStartStr)
       .reduce((s, e) => s + Number(e.amount), 0)
 
-    return { todayTotal, weekTotal, monthTotal, count: allExpenses.length }
+    // Forecast: only project if we're at least 3 days into the month
+    const dayOfMonth   = now.getDate()
+    const daysInMonth  = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const forecastMonth = dayOfMonth >= 3
+      ? parseFloat((monthTotal / dayOfMonth * daysInMonth).toFixed(2))
+      : null
+
+    return { todayTotal, weekTotal, monthTotal, count: allExpenses.length, forecastMonth }
   }, [allExpenses])
+
+  // Helper: render the budget section inside a quick-stat card
+  function OverallBudgetSection({ budgetKey, currentSpend }) {
+    const budget = overallBudgets[budgetKey]
+    if (budget) {
+      const pct  = Math.min(100, Math.round((currentSpend / budget) * 100))
+      const over = pct >= 100
+      const near = pct >= 80 && !over
+      return (
+        <div className="qs-budget-section">
+          <div className="budget-bar-track">
+            <div
+              className={`budget-bar-fill ${over ? 'budget-over' : near ? 'budget-near' : ''}`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="qs-budget-footer">
+            <span className={over ? 'budget-over-text' : ''}>{pct}% of £{budget}</span>
+            {editingOverall === budgetKey ? (
+              <span className="budget-edit-row">
+                <input
+                  className="budget-input" type="number" value={overallInput} min="1"
+                  onChange={e => setOverallInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && saveOverallBudget(budgetKey)}
+                  autoFocus
+                />
+                <button className="budget-save" onClick={() => saveOverallBudget(budgetKey)}>✓</button>
+                <button className="budget-cancel" onClick={() => setEditingOverall(null)}>✕</button>
+              </span>
+            ) : (
+              <button className="budget-edit-btn" onClick={() => { setEditingOverall(budgetKey); setOverallInput(String(budget)) }}>Edit</button>
+            )}
+          </div>
+        </div>
+      )
+    }
+    if (editingOverall === budgetKey) {
+      return (
+        <div className="budget-set-row">
+          <input
+            className="budget-input" type="number"
+            placeholder={`${budgetKey === 'weekly' ? 'Weekly' : 'Monthly'} limit £`}
+            value={overallInput} min="1"
+            onChange={e => setOverallInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && saveOverallBudget(budgetKey)}
+            autoFocus
+          />
+          <button className="budget-save" onClick={() => saveOverallBudget(budgetKey)}>✓</button>
+          <button className="budget-cancel" onClick={() => setEditingOverall(null)}>✕</button>
+        </div>
+      )
+    }
+    return (
+      <button className="budget-set-btn" onClick={() => { setEditingOverall(budgetKey); setOverallInput('') }}>
+        + Set limit
+      </button>
+    )
+  }
 
   return (
     <div className="page">
@@ -230,14 +297,22 @@ export default function DashboardPage() {
               <span className="qs-label">Today</span>
               <span className="qs-value">£{quickStats.todayTotal.toFixed(2)}</span>
             </div>
+
             <div className="quick-stat-card">
               <span className="qs-label">This Week</span>
               <span className="qs-value">£{quickStats.weekTotal.toFixed(2)}</span>
+              <OverallBudgetSection budgetKey="weekly" currentSpend={quickStats.weekTotal} />
             </div>
+
             <div className="quick-stat-card">
               <span className="qs-label">This Month</span>
               <span className="qs-value">£{quickStats.monthTotal.toFixed(2)}</span>
+              <OverallBudgetSection budgetKey="monthly" currentSpend={quickStats.monthTotal} />
+              {quickStats.forecastMonth !== null && (
+                <p className="qs-forecast">Forecast: £{quickStats.forecastMonth.toFixed(2)}</p>
+              )}
             </div>
+
             <div className="quick-stat-card">
               <span className="qs-label">All Expenses</span>
               <span className="qs-value">{quickStats.count}</span>
@@ -245,13 +320,13 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Row 1: Total banner ── */}
+        {/* ── Total banner ── */}
         <div className="total-card">
           <span className="total-label">Total Spent</span>
           <span className="total-amount">£{total.toFixed(2)}</span>
         </div>
 
-        {/* ── Row 2: Time filter ── */}
+        {/* ── Time filter ── */}
         <div className="filter-bar">
           {FILTERS.map(f => (
             <button
@@ -276,7 +351,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                {/* ── Row 3: Charts (2/3) + Insights (1/3) ── */}
+                {/* ── Charts (2/3) + Insights (1/3) ── */}
                 <div className="dashboard-cols">
                   <div className="charts-col">
                     <div className="chart-card">
@@ -318,15 +393,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Sidebar insights panel */}
                   <InsightsPanel summary={summary} allExpenses={allExpenses} />
                 </div>
 
-                {/* ── Row 4: Category cards with budget progress bars ── */}
+                {/* ── Category cards with per-category budget bars ── */}
                 <div className="category-grid">
                   {summary.map(item => {
-                    const budget  = budgets[item._id]
-                    const pct     = budget ? Math.min(100, Math.round((item.total / budget) * 100)) : null
+                    const budget     = budgets[item._id]
+                    const pct        = budget ? Math.min(100, Math.round((item.total / budget) * 100)) : null
                     const overBudget = pct !== null && pct >= 100
                     const nearBudget = pct !== null && pct >= 80 && pct < 100
                     return (
@@ -335,7 +409,6 @@ export default function DashboardPage() {
                         <span className="category-amount">£{item.total.toFixed(2)}</span>
                         <span className="category-count">{item.count} expense{item.count !== 1 ? 's' : ''}</span>
 
-                        {/* Budget progress bar */}
                         {budget ? (
                           <div className="budget-section">
                             <div className="budget-bar-track">
@@ -351,13 +424,11 @@ export default function DashboardPage() {
                               {editingBudget === item._id ? (
                                 <span className="budget-edit-row">
                                   <input
-                                    className="budget-input"
-                                    type="number"
-                                    value={budgetInput}
+                                    className="budget-input" type="number"
+                                    value={budgetInput} min="1"
                                     onChange={e => setBudgetInput(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && saveBudget(item._id)}
                                     autoFocus
-                                    min="1"
                                   />
                                   <button className="budget-save" onClick={() => saveBudget(item._id)}>✓</button>
                                   <button className="budget-cancel" onClick={() => setEditingBudget(null)}>✕</button>
@@ -371,14 +442,12 @@ export default function DashboardPage() {
                           editingBudget === item._id ? (
                             <div className="budget-set-row">
                               <input
-                                className="budget-input"
-                                type="number"
+                                className="budget-input" type="number"
                                 placeholder="Monthly limit £"
-                                value={budgetInput}
+                                value={budgetInput} min="1"
                                 onChange={e => setBudgetInput(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && saveBudget(item._id)}
                                 autoFocus
-                                min="1"
                               />
                               <button className="budget-save" onClick={() => saveBudget(item._id)}>✓</button>
                               <button className="budget-cancel" onClick={() => setEditingBudget(null)}>✕</button>
@@ -394,22 +463,15 @@ export default function DashboardPage() {
                   })}
                 </div>
 
-                {/* ── Row 5: Recent expenses ── */}
+                {/* ── Recent expenses ── */}
                 {recentExpenses.length > 0 && (
                   <div className="recent-section">
                     <div className="recent-header">
                       <h3>Recent Expenses</h3>
                       <Link to="/expenses" className="recent-view-all">View all →</Link>
                     </div>
-
                     {recentExpenses.map(exp => (
                       <div key={exp._id} className="recent-row">
-                        {/*
-                          Adaptive status dot:
-                          Green  = system suggested correctly (wasAutoCategorised)
-                          Amber  = user corrected the suggestion (wasOverridden) — learning happened
-                          Grey   = no suggestion involved (manual mode or demo data)
-                        */}
                         <span className={`dot ${
                           exp.wasAutoCategorised ? 'dot-green' :
                           exp.wasOverridden      ? 'dot-amber' : 'dot-grey'
@@ -431,9 +493,9 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* ── Spending heatmap ── */}
+        {/* ── Monthly trend chart (last 12 months) ── */}
         {allExpenses.length > 0 && (
-          <SpendingHeatmap allExpenses={allExpenses} />
+          <MonthlyTrendChart allExpenses={allExpenses} />
         )}
       </main>
     </div>

@@ -8,6 +8,7 @@ const {
   getSummary,
   updateExpense,
   deleteExpense,
+  deleteAllExpenses,
   getCategories,
 } = require('../controllers/expenseController');
 
@@ -32,6 +33,7 @@ router.post(
 );
 
 router.get('/', listExpenses);
+router.delete('/', deleteAllExpenses);
 router.put('/:id', updateExpense);
 router.delete('/:id', deleteExpense);
 
