@@ -47,7 +47,6 @@ export default function RulesPage() {
 
         {!loading && !error && (
           <>
-            {/* ── Personal rules ── */}
             <section className="rules-section">
               <div className="rules-section-header">
                 <h3>Your Personal Rules</h3>
@@ -94,7 +93,6 @@ export default function RulesPage() {
               )}
             </section>
 
-            {/* ── Default (global) rules ── */}
             <section className="rules-section">
               <div className="rules-section-header">
                 <h3>Default Rules</h3>

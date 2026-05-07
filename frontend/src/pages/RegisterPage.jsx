@@ -4,12 +4,6 @@ import client from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { DEMO_EXPENSES, randomDateWithin } from '../utils/demoData'
 
-/**
- * Creates all demo expenses for a brand-new user.
- * Each expense is sent to POST /api/expenses with a random date
- * within the past 30 days so the dashboard looks naturally populated.
- * Runs after the JWT token is already stored so the auth header is present.
- */
 async function seedDemoExpenses() {
   const requests = DEMO_EXPENSES.map(exp =>
     client.post('/expenses', {
@@ -19,7 +13,6 @@ async function seedDemoExpenses() {
       date:        randomDateWithin(30),
     })
   )
-  // Fire all requests in parallel for speed
   const results = await Promise.allSettled(requests)
   // Count how many actually succeeded
   return results.filter(r => r.status === 'fulfilled').length

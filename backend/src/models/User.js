@@ -27,11 +27,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/**
- * Hashes the plain-text password before saving.
- * Uses bcrypt with a salt rounds value of 10, which provides
- * a balance between security and performance (Stallings, 2017).
- */
 userSchema.pre('save', async function (next) {
   if (!this.isModified('passwordHash')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -39,16 +34,10 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-/**
- * Compares a plain-text password against the stored hash.
- */
 userSchema.methods.comparePassword = async function (plainPassword) {
   return bcrypt.compare(plainPassword, this.passwordHash);
 };
 
-/**
- * Removes sensitive fields when serialising to JSON.
- */
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.passwordHash;

@@ -1,20 +1,9 @@
-/**
- * InsightsPanel
- * =============
- * Three data-driven insights on the dashboard sidebar.
- *
- * Props:
- *   summary     — byCategory array from /api/expenses/summary (current period)
- *   allExpenses — flat list of all expenses (used for biggest-expense insight)
- */
-
 import { useState, useEffect } from 'react'
 import client from '../api/client'
 
 export default function InsightsPanel({ summary, allExpenses = [] }) {
   const [lastSummary, setLastSummary] = useState([])
 
-  // Fetch the previous 30-day window so we can compare spending period-over-period
   useEffect(() => {
     const now   = new Date()
     const end   = new Date(now);  end.setDate(end.getDate() - 30)
@@ -25,13 +14,11 @@ export default function InsightsPanel({ summary, allExpenses = [] }) {
       .catch(() => {})
   }, [])
 
-  // ── Insight 1: Top category ──
   const topCategory = summary[0] ?? null
   const total       = summary.reduce((s, i) => s + i.total, 0)
   const topPct      = topCategory && total > 0
     ? Math.round((topCategory.total / total) * 100) : 0
 
-  // ── Insight 2: Biggest period-over-period change ──
   const comparisons = summary.map(curr => {
     const prev = lastSummary.find(p => p._id === curr._id)
     if (!prev || prev.total === 0) return null
@@ -43,7 +30,6 @@ export default function InsightsPanel({ summary, allExpenses = [] }) {
     ? comparisons.reduce((best, c) => Math.abs(c.pct) > Math.abs(best.pct) ? c : best)
     : null
 
-  // ── Insight 3: Single biggest expense ──
   const biggest = allExpenses.length > 0
     ? allExpenses.reduce((best, e) => Number(e.amount) > Number(best.amount) ? e : best)
     : null

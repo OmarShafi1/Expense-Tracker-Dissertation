@@ -6,12 +6,6 @@ const {
   learnFromCorrection,
 } = require('../utils/categoriser');
 
-/**
- * POST /api/expenses/suggest
- * Returns a suggested category for the given description without
- * persisting anything. Used by the frontend to populate the
- * category field as the user types.
- */
 const suggest = async (req, res, next) => {
   try {
     const { description } = req.body;
@@ -22,13 +16,6 @@ const suggest = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/expenses
- * Creates a new expense. If the user accepted the suggestion the
- * record is flagged wasAutoCategorised. If they overrode it the
- * record is flagged wasOverridden AND a new personal rule is
- * added/updated via learnFromCorrection.
- */
 const createExpense = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -53,8 +40,6 @@ const createExpense = async (req, res, next) => {
       suggestedCategory: suggestedCategory || null,
     });
 
-    // Adaptive learning step: if the user overrode the suggestion,
-    // record a personal rule so future similar inputs are correct.
     if (wasOverridden) {
       await learnFromCorrection(description, category, req.user._id);
     }
@@ -65,11 +50,6 @@ const createExpense = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/expenses
- * Lists all expenses for the current user, optionally filtered by
- * date range and category.
- */
 const listExpenses = async (req, res, next) => {
   try {
     const { startDate, endDate, category } = req.query;
@@ -91,10 +71,6 @@ const listExpenses = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/expenses/summary
- * Returns aggregated spending data used by the dashboard.
- */
 const getSummary = async (req, res, next) => {
   try {
     const userId = req.user._id;
@@ -126,9 +102,6 @@ const getSummary = async (req, res, next) => {
     const total = totalAgg[0]?.total || 0;
     const count = totalAgg[0]?.count || 0;
 
-    // Adaptive accuracy metric: of the expenses where a suggestion
-    // existed, what proportion did the user accept? Useful for the
-    // evaluation chapter.
     const accuracyAgg = await Expense.aggregate([
       { $match: { ...match, suggestedCategory: { $ne: null } } },
       {
@@ -170,7 +143,6 @@ const updateExpense = async (req, res, next) => {
     if (category !== undefined && category !== previousCategory) {
       expense.category = category;
       expense.wasOverridden = true;
-      // Edits to category also feed the adaptive engine.
       await learnFromCorrection(expense.description, category, req.user._id);
     }
 

@@ -1,9 +1,5 @@
 const mongoose = require('mongoose');
 
-/**
- * Default categories used by the system.
- * Exposed for use by the rules engine and frontend.
- */
 const CATEGORIES = [
   'Food',
   'Transport',
@@ -44,7 +40,6 @@ const expenseSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
-    // --- Flags used for the comparative evaluation study ---
     wasAutoCategorised: {
       type: Boolean,
       default: false,

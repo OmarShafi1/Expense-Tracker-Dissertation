@@ -1,14 +1,5 @@
 const mongoose = require('mongoose');
 
-/**
- * Records data points for the comparative usability evaluation
- * (manual vs adaptive categorisation). Each row is one task
- * completed by one participant in one mode.
- *
- * This data feeds directly into the Testing chapter of the
- * dissertation: task completion time, categorisation accuracy,
- * and (optionally) NASA-TLX / SUS scores recorded after the session.
- */
 const evaluationLogSchema = new mongoose.Schema(
   {
     userId: {
@@ -19,7 +10,7 @@ const evaluationLogSchema = new mongoose.Schema(
     },
     sessionId: {
       type: String,
-      required: true, // Groups tasks belonging to one test session
+      required: true,
     },
     mode: {
       type: String,
@@ -28,7 +19,7 @@ const evaluationLogSchema = new mongoose.Schema(
     },
     taskId: {
       type: String,
-      required: true, // e.g. "task_1_add_uber_expense"
+      required: true,
     },
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },

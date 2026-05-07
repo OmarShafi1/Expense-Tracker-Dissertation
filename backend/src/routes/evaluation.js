@@ -5,11 +5,6 @@ const EvaluationLog = require('../models/EvaluationLog');
 const router = express.Router();
 router.use(protect);
 
-/**
- * POST /api/evaluation/log
- * Records a single completed task during a usability test session.
- * The frontend Evaluation Mode UI calls this after each task.
- */
 router.post('/log', async (req, res, next) => {
   try {
     const log = await EvaluationLog.create({
@@ -22,11 +17,6 @@ router.post('/log', async (req, res, next) => {
   }
 });
 
-/**
- * GET /api/evaluation/results
- * Aggregates the user's logs by mode for export to CSV.
- * Used to populate the Testing chapter of the dissertation.
- */
 router.get('/results', async (req, res, next) => {
   try {
     const logs = await EvaluationLog.find({ userId: req.user._id })

@@ -1,14 +1,3 @@
-/**
- * ThemeContext
- * ============
- * Manages the light / dark colour scheme for the entire app.
- * Persists the user's choice in localStorage so it survives page refreshes.
- *
- * The chosen theme is applied by setting data-theme="dark" on <html>.
- * All colours are defined as CSS custom properties in index.css and swap
- * automatically when the attribute changes — no JavaScript colour logic needed.
- */
-
 import { createContext, useContext, useEffect, useState } from 'react'
 
 const ThemeContext = createContext(null)

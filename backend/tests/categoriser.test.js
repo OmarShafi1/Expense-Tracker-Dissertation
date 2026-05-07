@@ -1,11 +1,3 @@
-/**
- * Unit tests for the adaptive categorisation engine.
- *
- * These tests are referenced in the Testing chapter of the
- * dissertation (Section 13). They use mongodb-memory-server so
- * no real database is required.
- */
-
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const Rule = require('../src/models/Rule');

@@ -1,7 +1,3 @@
-/**
- * Catches errors thrown anywhere in the request pipeline and returns
- * a consistent JSON response.
- */
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
 

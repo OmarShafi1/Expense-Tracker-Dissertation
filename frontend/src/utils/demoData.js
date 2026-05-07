@@ -1,12 +1,3 @@
-/**
- * Demo expenses seeded automatically on first sign-up.
- * Descriptions deliberately match keywords in the default rule set
- * (see backend/src/utils/defaultRules.js) so the categorisation engine
- * demonstrates its adaptive suggestions immediately without any user effort.
- *
- * Amounts are realistic for a UK university student (£1.50 – £45).
- */
-
 export const DEMO_EXPENSES = [
   // Groceries
   { description: 'Tesco weekly shop',     amount: 34.50, category: 'Groceries' },
@@ -61,10 +52,6 @@ export const DEMO_EXPENSES = [
   { description: 'University printing',   amount: 3.60,  category: 'Education' },
 ]
 
-/**
- * Returns a date string (YYYY-MM-DD) randomly within the past `maxDays` days.
- * Used to spread demo expenses realistically across the past month.
- */
 export function randomDateWithin(maxDays = 30) {
   const d = new Date()
   d.setDate(d.getDate() - Math.floor(Math.random() * maxDays))

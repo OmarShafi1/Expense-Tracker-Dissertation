@@ -1,36 +1,5 @@
-/**
- * Adaptive Rule-Based Categorisation Engine
- * =========================================
- *
- * This module implements the core adaptive categorisation logic
- * described in the project's literature review and design chapters.
- *
- * It uses a transparent rule-based approach (Sommerville, 2015)
- * augmented with adaptive learning from user corrections (Amershi
- * et al., 2014; Fails and Olsen, 2003). Unlike machine-learning
- * classifiers, this approach:
- *
- *   - Requires no training data (cold-start friendly)
- *   - Is fully explainable to the user
- *   - Adapts immediately to a single correction
- *   - Remains efficient on small datasets
- *
- * Matching strategy:
- *   1. Tokenise the description (lowercase, alphanumeric only)
- *   2. Look up rules whose keyword is a substring of any token
- *      OR a substring of the full description.
- *   3. Personal (user-owned) rules outrank global default rules.
- *   4. Among rules of equal priority, the rule with the LONGEST
- *      keyword wins (most-specific-match heuristic).
- *   5. Ties are broken by correctionCount (most reinforced wins).
- */
-
 const Rule = require('../models/Rule');
 
-/**
- * Tokenises an expense description into lowercase alphanumeric tokens.
- * Also returns the raw lowercased description for substring fallback.
- */
 const tokenise = (description) => {
   const lower = description.toLowerCase().trim();
   const tokens = lower
@@ -39,14 +8,6 @@ const tokenise = (description) => {
   return { tokens, lower };
 };
 
-/**
- * Suggests a category for the given description.
- *
- * @param {string} description - The expense description entered by the user.
- * @param {string|null} userId - The current user's ID (or null for unauth).
- * @returns {Promise<{category: string, matchedKeyword: string|null,
- *                    confidence: number, ruleId: string|null}>}
- */
 const suggestCategory = async (description, userId) => {
   if (!description || description.trim().length === 0) {
     return { category: 'Other', matchedKeyword: null, confidence: 0, ruleId: null };
@@ -109,19 +70,6 @@ const suggestCategory = async (description, userId) => {
   };
 };
 
-/**
- * Records that a user has overridden the suggested category.
- *
- * Strategy:
- *   1. Pick the most distinctive token from the description
- *      (longest token, with a sensible minimum length).
- *   2. If a personal rule for that token already exists, update
- *      its category to the new one and increment correctionCount.
- *   3. Otherwise create a new personal rule with priority 10.
- *
- * This is the adaptive step described in section 2.4 of the
- * literature review.
- */
 const learnFromCorrection = async (description, newCategory, userId) => {
   const { tokens } = tokenise(description);
   if (tokens.length === 0) return null;

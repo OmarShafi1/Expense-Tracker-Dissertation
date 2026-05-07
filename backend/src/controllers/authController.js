@@ -2,18 +2,11 @@ const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 
-/**
- * Generates a signed JWT for the given user ID.
- */
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 
-/**
- * POST /api/auth/register
- * Creates a new user account.
- */
 const register = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -36,10 +29,6 @@ const register = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/auth/login
- * Authenticates an existing user.
- */
 const login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -61,10 +50,6 @@ const login = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/auth/me
- * Returns the currently authenticated user.
- */
 const getMe = async (req, res) => {
   res.json({ user: req.user });
 };

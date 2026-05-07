@@ -100,7 +100,6 @@ export default function DashboardPage() {
   const [demoNotice, setDemoNotice] = useState(null)
   const [filter, setFilter] = useState('month')
 
-  // Per-category budgets: { "Groceries": 200, ... }
   const [budgets, setBudgets] = useState(() => {
     try { return JSON.parse(localStorage.getItem('budgets') || '{}') }
     catch { return {} }
@@ -108,7 +107,6 @@ export default function DashboardPage() {
   const [editingBudget, setEditingBudget] = useState(null)
   const [budgetInput, setBudgetInput] = useState('')
 
-  // Overall weekly/monthly budgets: { weekly: 150, monthly: 600 }
   const [overallBudgets, setOverallBudgets] = useState(() => {
     try { return JSON.parse(localStorage.getItem('overallBudgets') || '{}') }
     catch { return {} }
@@ -201,7 +199,6 @@ export default function DashboardPage() {
       .filter(e => (e.date || '').split('T')[0] >= monthStartStr)
       .reduce((s, e) => s + Number(e.amount), 0)
 
-    // Forecast: only project if we're at least 3 days into the month
     const dayOfMonth   = now.getDate()
     const daysInMonth  = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
     const forecastMonth = dayOfMonth >= 3
@@ -211,7 +208,6 @@ export default function DashboardPage() {
     return { todayTotal, weekTotal, monthTotal, count: allExpenses.length, forecastMonth }
   }, [allExpenses])
 
-  // Helper: render the budget section inside a quick-stat card
   function OverallBudgetSection({ budgetKey, currentSpend }) {
     const budget = overallBudgets[budgetKey]
     if (budget) {
@@ -274,7 +270,6 @@ export default function DashboardPage() {
       <Navbar />
       <main className="container-wide">
 
-        {/* ── Header ── */}
         <div className="page-header">
           <div>
             <h2>Dashboard</h2>
@@ -290,7 +285,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Quick stats strip ── */}
         {quickStats && (
           <div className="quick-stats">
             <div className="quick-stat-card">
@@ -320,13 +314,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Total banner ── */}
         <div className="total-card">
           <span className="total-label">Total Spent</span>
           <span className="total-amount">£{total.toFixed(2)}</span>
         </div>
 
-        {/* ── Time filter ── */}
         <div className="filter-bar">
           {FILTERS.map(f => (
             <button
@@ -351,7 +343,6 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                {/* ── Charts (2/3) + Insights (1/3) ── */}
                 <div className="dashboard-cols">
                   <div className="charts-col">
                     <div className="chart-card">
@@ -396,7 +387,6 @@ export default function DashboardPage() {
                   <InsightsPanel summary={summary} allExpenses={allExpenses} />
                 </div>
 
-                {/* ── Category cards with per-category budget bars ── */}
                 <div className="category-grid">
                   {summary.map(item => {
                     const budget     = budgets[item._id]
@@ -463,7 +453,6 @@ export default function DashboardPage() {
                   })}
                 </div>
 
-                {/* ── Recent expenses ── */}
                 {recentExpenses.length > 0 && (
                   <div className="recent-section">
                     <div className="recent-header">
@@ -493,7 +482,6 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* ── Monthly trend chart (last 12 months) ── */}
         {allExpenses.length > 0 && (
           <MonthlyTrendChart allExpenses={allExpenses} />
         )}

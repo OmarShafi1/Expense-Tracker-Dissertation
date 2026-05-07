@@ -1,12 +1,3 @@
-/**
- * Seeds the database with the default global categorisation rules.
- *
- * Run from the backend folder:
- *   node src/utils/seedRules.js
- *
- * Existing global rules are not duplicated thanks to the unique
- * (userId, keyword) index in the Rule model.
- */
 require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
