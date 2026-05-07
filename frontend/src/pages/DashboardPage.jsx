@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   PieChart, Pie, Cell, Tooltip as PieTooltip, Legend,
@@ -7,6 +7,7 @@ import {
 import client from '../api/client'
 import Navbar from '../components/Navbar'
 import InsightsPanel from '../components/InsightsPanel'
+import SpendingHeatmap from '../components/SpendingHeatmap'
 import { useAuth } from '../context/AuthContext'
 
 const PALETTE = [
@@ -180,10 +181,31 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 8)
 
+  const quickStats = useMemo(() => {
+    if (allExpenses.length === 0) return null
+    const todayStr = new Date().toISOString().split('T')[0]
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 6)
+    const weekAgoStr = weekAgo.toISOString().split('T')[0]
+    const monthStart = new Date(); monthStart.setDate(1)
+    const monthStartStr = monthStart.toISOString().split('T')[0]
+
+    const todayTotal = allExpenses
+      .filter(e => (e.date || '').startsWith(todayStr))
+      .reduce((s, e) => s + Number(e.amount), 0)
+    const weekTotal = allExpenses
+      .filter(e => { const d = (e.date || '').split('T')[0]; return d >= weekAgoStr && d <= todayStr })
+      .reduce((s, e) => s + Number(e.amount), 0)
+    const monthTotal = allExpenses
+      .filter(e => (e.date || '').split('T')[0] >= monthStartStr)
+      .reduce((s, e) => s + Number(e.amount), 0)
+
+    return { todayTotal, weekTotal, monthTotal, count: allExpenses.length }
+  }, [allExpenses])
+
   return (
     <div className="page">
       <Navbar />
-      <main className="container">
+      <main className="container-wide">
 
         {/* ── Header ── */}
         <div className="page-header">
@@ -198,6 +220,28 @@ export default function DashboardPage() {
           <div className="demo-notice">
             <span>🎉 {demoNotice} demo expenses added to help you get started.</span>
             <button className="demo-notice-close" onClick={() => setDemoNotice(null)}>✕</button>
+          </div>
+        )}
+
+        {/* ── Quick stats strip ── */}
+        {quickStats && (
+          <div className="quick-stats">
+            <div className="quick-stat-card">
+              <span className="qs-label">Today</span>
+              <span className="qs-value">£{quickStats.todayTotal.toFixed(2)}</span>
+            </div>
+            <div className="quick-stat-card">
+              <span className="qs-label">This Week</span>
+              <span className="qs-value">£{quickStats.weekTotal.toFixed(2)}</span>
+            </div>
+            <div className="quick-stat-card">
+              <span className="qs-label">This Month</span>
+              <span className="qs-value">£{quickStats.monthTotal.toFixed(2)}</span>
+            </div>
+            <div className="quick-stat-card">
+              <span className="qs-label">All Expenses</span>
+              <span className="qs-value">{quickStats.count}</span>
+            </div>
           </div>
         )}
 
@@ -385,6 +429,11 @@ export default function DashboardPage() {
               </>
             )}
           </>
+        )}
+
+        {/* ── Spending heatmap ── */}
+        {allExpenses.length > 0 && (
+          <SpendingHeatmap allExpenses={allExpenses} />
         )}
       </main>
     </div>

@@ -784,7 +784,142 @@ body {
 /* ── Expense meta (date column in expense list) ── */
 .expense-meta { display: flex; align-items: center; }
 
+/* ── Wide container (used on dashboard + expenses for horizontal space) ── */
+.container-wide { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* ── Quick stats strip (Dashboard) ── */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.quick-stat-card {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-top: 3px solid var(--accent);
+}
+.qs-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.qs-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+
+/* ── Spending heatmap (Dashboard) ── */
+.heatmap-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  margin-top: 1.5rem;
+  overflow: hidden;
+}
+.heatmap-month-row {
+  display: grid;
+  grid-template-columns: repeat(52, 1fr);
+  gap: 2px;
+  margin-bottom: 3px;
+}
+.heatmap-month-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: visible;
+}
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(52, 1fr);
+  gap: 2px;
+}
+.heatmap-col { display: flex; flex-direction: column; gap: 2px; }
+.heatmap-cell { aspect-ratio: 1; border-radius: 2px; cursor: default; }
+
+/* Heatmap intensity levels — purple palette to match the app */
+.hm-0 { background: var(--border-mid); }
+.hm-1 { background: #c4b5fd; }
+.hm-2 { background: #8b5cf6; }
+.hm-3 { background: #6d28d9; }
+.hm-4 { background: #4c1d95; }
+[data-theme="dark"] .hm-0 { background: #1e2436; }
+[data-theme="dark"] .hm-1 { background: #2e1065; }
+[data-theme="dark"] .hm-2 { background: #4c1d95; }
+[data-theme="dark"] .hm-3 { background: #6d28d9; }
+[data-theme="dark"] .hm-4 { background: #a78bfa; }
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 0.6rem;
+  justify-content: flex-end;
+}
+.heatmap-legend-label { font-size: 0.72rem; color: var(--text-muted); margin: 0 3px; }
+
+/* ── Expenses two-column layout ── */
+.expenses-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 1.5rem;
+  align-items: start;
+}
+.expenses-main { min-width: 0; }
+.expenses-sidebar { position: sticky; top: 75px; }
+
+.exp-stats-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-md);
+}
+.exp-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border-mid);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.exp-stat-row:last-of-type { border-bottom: none; }
+.exp-stat-row strong { color: var(--text-primary); font-weight: 700; }
+
+.exp-cats-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+  margin: 0.85rem 0 0.5rem;
+}
+.exp-cat-row { margin-bottom: 0.6rem; }
+.exp-cat-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+}
+.exp-cat-name { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; }
+.exp-cat-pct  { font-size: 0.75rem; color: var(--text-muted); }
+.exp-cat-bar-track {
+  height: 5px;
+  background: var(--border-mid);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.exp-cat-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .expenses-layout { grid-template-columns: 1fr; }
+  .expenses-sidebar { position: static; }
+  .quick-stats { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 768px) {
   .dashboard-cols { grid-template-columns: 1fr; }
   .insights-panel { position: static; }
@@ -792,4 +927,6 @@ body {
   .btn-eval-toggle { display: none; }
   .filter-chips { gap: 0.3rem; }
   .filter-chip { padding: 0.25rem 0.65rem; font-size: 0.75rem; }
+  .quick-stats { grid-template-columns: repeat(2, 1fr); }
+  .heatmap-card { overflow-x: auto; }
 }
